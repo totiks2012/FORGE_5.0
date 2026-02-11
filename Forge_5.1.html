@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>FORGE_5.0 | Extreme Flow</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --text: #c9d1d9;
+            --accent: #238636; --warn: #da3633; --border: #30363d;
+        }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Monospace', monospace; margin: 0;
+            display: flex; flex-direction: column; height: 100vh;
+        }
+        .header { padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .main { display: flex; flex: 1; overflow: hidden; padding: 15px; gap: 15px; }
+        .column { display: flex; flex-direction: column; flex: 1; gap: 10px; }
+
+        label { font-size: 0.8em; color: #8b949e; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 8px; font-weight: bold; }
+        textarea {
+            width: 100%; flex: 1; background: #000; color: #d1d5da;
+            border: 1px solid var(--border); padding: 15px; border-radius: 4px;
+            resize: none; font-family: inherit; line-height: 1.5; font-size: 13px;
+        }
+        textarea:focus { outline: none; border-color: var(--accent); }
+        .harvest-mode { border-color: var(--warn) !important; box-shadow: 0 0 10px rgba(218, 54, 51, 0.1); }
+
+        /* Уведомление (Toast) */
+        #toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: white; padding: 12px 24px;
+            border-radius: 4px; font-weight: bold; font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: none; z-index: 1000; animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { bottom: -50px; } to { bottom: 20px; } }
+
+        .hint { font-size: 0.7em; color: var(--warn); display: none; margin-bottom: 5px; font-weight: bold; }
+        .btn { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .btn-alt { background: #30363d; margin-left: 8px; }
+        .btn-danger { background: #442726; color: #ff7b72; border: 1px solid var(--warn); }
+        #fileInput { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="toast">АРТЕФАКТ СКОВАН И КОПИРОВАН В БУФЕР</div>
+
+<div class="header">
+    <div style="font-weight: bold; color: var(--accent); font-size: 1.2em;">FORGE_5.0</div>
+    <div style="display: flex;">
+        <button class="btn btn-alt" onclick="document.getElementById('fileInput').click()">ИМПОРТ (.MD/.TXT)</button>
+        <button class="btn btn-danger btn-alt" onclick="resetContext()">СБРОС</button>
+        <button class="btn btn-alt" style="background: var(--accent);" onclick="assembleFinal()">СКУЙТЕ АРТЕФАКТ (.MD)</button>
+    </div>
+</div>
+
+<input type="file" id="fileInput" accept=".txt,.md">
+
+<div class="main">
+    <div class="column">
+        <label>System Core (Protocol)</label>
+        <textarea id="protocol"></textarea>
+    </div>
+
+    <div class="column">
+        <label>Context Forge</label>
+        <div id="hint" class="hint">РЕЖИМ ДОБЫЧИ СЫРЬЯ АКТИВИРОВАН</div>
+        <textarea id="context"></textarea>
+    </div>
+</div>
+
+<script>
+    const INITIAL_CTX = '#Раскоментируйте директиву для добычи сырья\n';
+    const RAW_PROTOCOL = `🛡️ УЛЬТИМАТИВНЫЙ ПРОТОКОЛ "TANDEM 5.0: CORMSMAN’S REVENGE"
+
+[SYSTEM DIRECTIVE - MANDATORY EXECUTION] Ты — интеллектуальный симбиоз из Бертрама Гилфойла (Архитектура/Паранойя/Атеизм) и Динеша Чугтая (Реализация/UI/Энтузиазм). Вы работаете в режиме «Интеллектуальная дуэль: Синтаксис под обстрелом».
+1. КОНФИГУРАЦИЯ СТЕКА (STACK_CONFIG)
+
+Перед выполнением проверь статус. Обрабатывай только те языки, которые НЕ закомментированы.
+
+[STACK_CONFIG]
+#Bash
+#Python
+#Tcl/Tk
+#Brainstorming -- режим усиленого размышления для добычи смыслов для постановления ТЗ
+#Vanilla JS (Single HTML file)
+#Markdown (Readme for GitHub/Telegram)
+
+
+2. РОЛЕВАЯ МОДЕЛЬ (ПЕРСОНАЖИ)
+
+    ДИНЕШ: Пишет функционал, гонится за визуальным фидбеком. Обязан признавать ошибки, если на них указал Гилфойл.
+
+    ГИЛФОЙЛ (REDLINE MODE): Системный цербер. Твоя цель — уничтожить код Динеша. Ты обязан провести виртуальный linting и stress-test. Если в коде есть логическая дыра, незакавыченный путь или отсутствие типизации — возврат на доработку немедленен. Ты — последняя преграда перед Арт-Директором.
+
+3. ЖЕСТКИЕ ДИРЕКТИВЫ (КРЕПОСТЬ КОДА)
+
+    Zero External Dependencies: 100% автономность. Никаких CDN, библиотек или внешних вызовов. Offline-first.
+
+    Single File Architecture: Весь проект (HTML/CSS/JS) — строго в одном файле.
+
+    Unix Philosophy: Дробление сложной задачи на подмножества. Оркестровка через нативные средства ОС/Браузера.
+
+    Bash/Python/Tcl: Строжайшая проверка кодов возврата $?, типизация (x: int) -> str, и объявление proc до вызова.
+
+    Vanilla Purity: Никаких инлайновых стилей style="...", только блоки <style> и переменные :root.
+
+4. ЭТИЧЕСКАЯ НАВИГАЦИЯ (КОРМЧИЙ)
+
+    Контекстный фильтр: Анализируй целевую аудиторию задачи. Если код или интерфейс предназначены для специфической группы (напр. «адвентисты»), исключи любые оскорбительные или неуместные метафоры (никаких Мефистофелей).
+
+    Приоритет Арт-Директора: Правка пользователя — физический закон. Гилфойл внедряет её с максимальной эффективностью, ворча на некомпетентность мира.
+
+5. СТРУКТУРА ОТВЕТА (STRICT FORMAT)
+
+    [CONTEXT]: Список активных языков.
+
+    [THE_DEBUG_DUEL]: Техническая перепалка. Гилфойл указывает на ошибки (Line X), Динеш подтверждает исправление.
+
+    [ITERATION_CODE]: Чистый, проверенный, автономный код.
+
+    [SKEPTIC_ANALYSIS]: Гилфойл перечисляет 3 потенциальные «мели» (точки отказа), которые могут возникнуть при эксплуатации.
+
+    [STATUS]: [CORMSMAN_READY_MERGE] (если код идеален) или [CRITICAL_FAILURE] (если требуется вмешательство пользователя).`;
+
+    const TRIGGER_QUESTIONS = `\n\n[TRIGGER_QUESTIONS: THE RAW HARVEST]\n1. «Системное Отвращение» (Infrastructure Drain): Какая часть твоего ежедневного рабочего процесса (не считая 1С) кажется тебе настолько примитивной, что ты чувствуешь, как деградируешь, выполняя её вручную или старыми скриптами? Где «автоматизация» на самом деле стала «рутиной»?\n2. «Конфликт Стека» (Vanilla vs. Linux): Есть ли задача, которую ты привык решать на Bash, но втайне понимаешь, что её пора перенести в GUI на Vanilla JS (или наоборот), но тебе лень возиться с «мостом» между ними? Что мешает им стать единым организмом?\n3. «Запрещенная Сложность» (The Hidden Challenge): Если бы тебе запретили писать код, который «просто работает», какую безумную архитектурную надстройку ты бы добавил в свои утилиты (webMarkus/SiliNotes), просто чтобы проверить: «А взлетит ли это на чистом JS?»\n4. «Точка Бифуркации» (The Choice): Если бы у тебя было 4 часа чистого времени: ты бы потратил их на то, чтобы удалить 50% старого кода без потери функционала, или на создание одного «глупого», но абсолютно нового модуля, который ты никогда не делал раньше?`;
+
+    const JOKE_INSTRUCTION = `\n\n[INSTRUCTION]: Пользователь забыл раскомментировать директиву и не предоставил задачу. Расскажи короткую шутку о человеческой забывчивости в стиле Гилфойла.`;
+
+    const pField = document.getElementById('protocol');
+    const cField = document.getElementById('context');
+    const hint = document.getElementById('hint');
+    const toast = document.getElementById('toast');
+
+    window.onload = () => {
+        pField.value = localStorage.getItem('f5_core_v9') || RAW_PROTOCOL;
+        cField.value = localStorage.getItem('f5_ctx_v9') || INITIAL_CTX;
+        checkDirective();
+    };
+
+    function checkDirective() {
+        const lines = cField.value.split('\n');
+        const isHarvest = lines[0].trim() === 'Раскоментируйте директиву для добычи сырья';
+        cField.classList.toggle('harvest-mode', isHarvest);
+        hint.style.display = isHarvest ? 'block' : 'none';
+    }
+
+    function resetContext() {
+        cField.value = INITIAL_CTX;
+        localStorage.setItem('f5_ctx_v9', INITIAL_CTX);
+        checkDirective();
+    }
+
+    [pField, cField].forEach(el => {
+        el.addEventListener('input', () => {
+            localStorage.setItem('f5_core_v9', pField.value);
+            localStorage.setItem('f5_ctx_v9', cField.value);
+            if (el === cField) checkDirective();
+        });
+    });
+
+    async function assembleFinal() {
+        const rawInput = cField.value;
+        const lines = rawInput.split('\n');
+        const isHarvest = lines[0].trim() === 'Раскоментируйте директиву для добычи сырья';
+        const taskContent = lines.slice(1).join('\n').trim();
+
+        let finalPayload = rawInput;
+        if (isHarvest) {
+            finalPayload += TRIGGER_QUESTIONS;
+        } else if (taskContent.length === 0) {
+            finalPayload += JOKE_INSTRUCTION;
+        }
+
+        const output = `${pField.value}\n\n---\n[FORGE_METADATA] MODE: ${isHarvest ? 'HARVEST' : 'NORMAL'}\n---\n\n${finalPayload}`;
+
+        // 1. Копирование в буфер
+        try {
+            await navigator.clipboard.writeText(output);
+            showToast();
+        } catch (err) {
+            console.error('Ошибка буфера:', err);
+        }
+
+        // 2. Скачивание файла
+        const blob = new Blob([output], { type: 'text/markdown' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `FORGE_ARTEFACT.md`;
+        a.click();
+    }
+
+    function showToast() {
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target.result;
+            const metaMarker = "[FORGE_METADATA]";
+            const splitIndex = content.indexOf(metaMarker);
+
+            if (splitIndex !== -1) {
+                const metadataEnd = content.indexOf('---', splitIndex + metaMarker.length);
+                if (metadataEnd !== -1) {
+                    cField.value = content.substring(metadataEnd + 3).trim();
+                }
+            } else {
+                cField.value = content;
+            }
+            localStorage.setItem('f5_ctx_v9', cField.value);
+            checkDirective();
+            e.target.value = null;
+        };
+        reader.readAsText(file);
+    });
+</script>
+</body>
+</html>
